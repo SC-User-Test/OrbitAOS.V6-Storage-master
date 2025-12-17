@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  orbitcomp-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orbitcomp:latest
+    container_name: orbitcomp-app
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - TZ=America/New_York
+      # Database connection - configure externally
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING:-Server=host.docker.internal;Database=OrbitComp;User Id=sa;Password=YourPassword123;}
+      # External service endpoints
+      - ExternalServices__ApiBaseUrl=${API_BASE_URL:-https://api.example.com}
+      - ExternalServices__TimeoutSeconds=${API_TIMEOUT:-30}
+    volumes:
+      - ./logs:/app/logs
+      - ./appsettings.Production.json:/app/appsettings.Production.json:ro
+    networks:
+      - orbitcomp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  orbitcomp-network:
+    driver: bridge
+
+volumes:
+  logs:
+    driver: local

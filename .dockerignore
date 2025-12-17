@@ -1,0 +1,61 @@
+# Build artifacts
+bin/
+obj/
+**/bin/
+**/obj/
+publish/
+
+# IDE and editor files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.swp
+*.*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*
+LICENSE*
+DOCS/
+docs/
+
+# Tests
+**/TestResults/
+**/*.Tests/
+**/*.Test/
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env
+.env.*
+launchSettings.json
+
+# Package files
+*.nupkg
+*.snupkg
+packages/
+
+# Azure and deployment
+*.pubxml
+*.azurePubxml
+
+# Node modules (if any)
+node_modules/
+npm-debug.log
+yarn-error.log
