@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  orbitaos-v6:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orbitaos-v6:latest
+    container_name: orbitaos-v6-app
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - DB_SERVER=${DB_SERVER:-sql-server}
+      - DB_NAME=${DB_NAME:-OrbitAOS}
+      - DB_USER=${DB_USER:-sa}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - ConnectionStrings__DefaultConnection=Server=${DB_SERVER:-sql-server};Database=${DB_NAME:-OrbitAOS};User Id=${DB_USER:-sa};Password=${DB_PASSWORD};MultipleActiveResultSets=true;TrustServerCertificate=true
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - orbitaos-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  orbitaos-network:
+    driver: bridge
+
+volumes:
+  logs:
+  data:

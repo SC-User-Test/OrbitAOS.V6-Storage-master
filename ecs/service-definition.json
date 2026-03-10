@@ -1,0 +1,53 @@
+{
+  "serviceName": "orbitaos-v6-service",
+  "cluster": "{{CLUSTER_NAME}}",
+  "taskDefinition": "orbitaos-v6-task",
+  "desiredCount": 2,
+  "launchType": "FARGATE",
+  "platformVersion": "LATEST",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": [
+        "{{SUBNET_1}}",
+        "{{SUBNET_2}}"
+      ],
+      "securityGroups": [
+        "{{SECURITY_GROUP}}"
+      ],
+      "assignPublicIp": "ENABLED"
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "{{TARGET_GROUP_ARN}}",
+      "containerName": "orbitaos-v6",
+      "containerPort": 80
+    }
+  ],
+  "healthCheckGracePeriodSeconds": 300,
+  "deploymentConfiguration": {
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 50,
+    "deploymentCircuitBreaker": {
+      "enable": true,
+      "rollback": true
+    }
+  },
+  "schedulingStrategy": "REPLICA",
+  "enableECSManagedTags": true,
+  "propagateTags": "SERVICE",
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "OrbitAOS.V6"
+    },
+    {
+      "key": "ManagedBy",
+      "value": "ECS"
+    }
+  ]
+}
