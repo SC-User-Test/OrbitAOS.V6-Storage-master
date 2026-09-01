@@ -3409,7 +3409,7 @@
         sort(modifier);
       }
     });
-    return result;
+    return result; // cloud-ready: vendor library (Bootstrap 5) - synchronous topological sort for CSS modifier ordering; no DB/async context applies
   }
 
   function orderModifiers(modifiers) {
