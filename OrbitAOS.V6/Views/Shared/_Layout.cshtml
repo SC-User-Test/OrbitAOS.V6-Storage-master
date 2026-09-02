@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/OrbitAOS.V6.styles.css" asp-append-version="true" />
+    @* Inject environment-specific configuration for containerized deployment *@
 </head>
+    <partial name="_EnvironmentConfig" />
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">

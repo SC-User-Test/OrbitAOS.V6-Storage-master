@@ -1,0 +1,31 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@* 
+    Environment Configuration Injection for Containerized Deployment
+    This partial view injects environment-specific configuration into the JavaScript runtime
+    Configuration values are loaded from:
+    - appsettings.json (default values)
+    - Environment variables (container runtime)
+    - Azure Key Vault (via Azure Key Vault CSI Driver on AKS)
+*@
+
+<script>
+    // Inject environment configuration into JavaScript runtime
+    // These values are populated from ASP.NET Core Configuration which reads from:
+    // 1. appsettings.json
+    // 2. Environment variables (set in Kubernetes ConfigMaps)
+    // 3. Azure Key Vault secrets (mounted via CSI Driver)
+    
+    window.ENV_API_BASE_URL = '@Configuration["AppSettings:ApiBaseUrl"]';
+    window.ENV_API_TIMEOUT = '@Configuration["AppSettings:ApiTimeout"]';
+    window.ENV_DEBUG_MODE = '@Configuration["AppSettings:DebugMode"]';
+    window.ENV_ENABLE_ANALYTICS = '@Configuration["AppSettings:EnableAnalytics"]';
+    window.ENV_AUTH_SERVICE_URL = '@Configuration["AppSettings:AuthServiceUrl"]';
+    window.ENV_API_KEY = '@Configuration["AppSettings:ApiKey"]';
+    window.ENV_NAME = '@Configuration["Environment"]';
+    window.ENV_APP_VERSION = '@Configuration["AppSettings:Version"]';
+</script>
+
+@* Load the runtime configuration module *@
+<script src="~/js/config.js" asp-append-version="true"></script>

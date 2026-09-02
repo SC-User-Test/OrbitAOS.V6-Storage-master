@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orbitaos-deployment
+  namespace: default
+  labels:
+    app: orbitaos
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: orbitaos
+  template:
+    metadata:
+      labels:
+        app: orbitaos
+        version: v1
+    spec:
+      containers:
+      - name: orbitaos
+        image: your-acr.azurecr.io/orbitaos:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        
+        # Environment variables from ConfigMap (non-sensitive)
+        envFrom:
+        - configMapRef:
+            name: orbitaos-config  # Change to orbitaos-config-staging or orbitaos-config-dev per environment
+        
+        # Sensitive environment variables from Azure Key Vault via CSI Driver
+        env:
+        - name: AppSettings__ApiKey
+          valueFrom:
+            secretKeyRef:
+              name: orbitaos-secrets
+              key: AppSettings__ApiKey
+        - name: ConnectionStrings__DefaultConnection
+          valueFrom:
+            secretKeyRef:
+              name: orbitaos-secrets
+              key: ConnectionStrings__DefaultConnection
+        - name: AppSettings__AuthClientSecret
+          valueFrom:
+            secretKeyRef:
+              name: orbitaos-secrets
+              key: AppSettings__AuthClientSecret
+        
+        # Health check probes
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Mount Azure Key Vault secrets via CSI Driver
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "orbitaos-azure-keyvault"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orbitaos-service
+  namespace: default
+  labels:
+    app: orbitaos
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: orbitaos
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: orbitaos-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - orbitaos.example.com
+    secretName: orbitaos-tls
+  rules:
+  - host: orbitaos.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: orbitaos-service
+            port:
+              number: 80

@@ -14,6 +14,9 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+// Add health checks for containerization
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -22,19 +25,22 @@ if (app.Environment.IsDevelopment())
     app.UseMigrationsEndPoint();
 }
 else
+app.UseStaticFiles(new StaticFileOptions
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=31536000");
+    }
+});
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map health check endpoint
+app.MapHealthChecks("/health");
 
 app.MapControllerRoute(
     name: "default",

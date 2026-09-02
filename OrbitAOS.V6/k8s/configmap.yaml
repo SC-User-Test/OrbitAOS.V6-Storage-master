@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orbitaos-config
+  namespace: default
+data:
+  # Application Settings - Non-sensitive configuration
+  # These values override appsettings.json at runtime
+  AppSettings__ApiBaseUrl: "https://api.production.example.com/api"
+  AppSettings__ApiTimeout: "30000"
+  AppSettings__DebugMode: "false"
+  AppSettings__EnableAnalytics: "true"
+  AppSettings__AuthServiceUrl: "https://auth.production.example.com"
+  AppSettings__Version: "1.0.0"
+  Environment: "Production"
+  
+  # ASP.NET Core Configuration
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8080"
+  
+  # Logging Configuration
+  Logging__LogLevel__Default: "Information"
+  Logging__LogLevel__Microsoft.AspNetCore: "Warning"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orbitaos-config-staging
+  namespace: default
+data:
+  # Staging Environment Configuration
+  AppSettings__ApiBaseUrl: "https://api.staging.example.com/api"
+  AppSettings__ApiTimeout: "30000"
+  AppSettings__DebugMode: "true"
+  AppSettings__EnableAnalytics: "false"
+  AppSettings__AuthServiceUrl: "https://auth.staging.example.com"
+  AppSettings__Version: "1.0.0"
+  Environment: "Staging"
+  ASPNETCORE_ENVIRONMENT: "Staging"
+  ASPNETCORE_URLS: "http://+:8080"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orbitaos-config-dev
+  namespace: default
+data:
+  # Development Environment Configuration
+  AppSettings__ApiBaseUrl: "https://api.dev.example.com/api"
+  AppSettings__ApiTimeout: "30000"
+  AppSettings__DebugMode: "true"
+  AppSettings__EnableAnalytics: "false"
+  AppSettings__AuthServiceUrl: "https://auth.dev.example.com"
+  AppSettings__Version: "1.0.0-dev"
+  Environment: "Development"
+  ASPNETCORE_ENVIRONMENT: "Development"
+  ASPNETCORE_URLS: "http://+:8080"

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  orbitaos-v6:
+    image: orbitaos-v6:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=${DATABASE_URL:-Server=localhost;Database=OrbitAOS;User Id=sa;Password=YourPassword123;})
+      - AppSettings__ApiKey=${API_KEY:-}
+    volumes:
+      - ./appsettings.json:/app/appsettings.json
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "dotnet", "OrbitAOS.V6.dll", "--health"] # Note: This is a placeholder, K8s handles this better
+      interval: 30s
+      timeout: 10s
+      retries: 3

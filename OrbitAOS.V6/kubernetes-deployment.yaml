@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orbitaos-config
+  namespace: default
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  DB_HOST: "sql-server-service"
+  DB_NAME: "OrbitAOS"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orbitaos-secrets
+  namespace: default
+type: Opaque
+stringData:
+  DB_USER: "sa"
+  DB_PASSWORD: "REPLACE_WITH_SECURE_PASSWORD"
+  ConnectionStrings__DefaultConnection: "Server=${DB_HOST};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};TrustServerCertificate=True"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orbitaos-deployment
+  namespace: default
+  labels:
+    app: orbitaos
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orbitaos
+  template:
+    metadata:
+      labels:
+        app: orbitaos
+    spec:
+      containers:
+      - name: orbitaos
+        image: orbitaos:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: orbitaos-config
+              key: ASPNETCORE_ENVIRONMENT
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: orbitaos-config
+              key: DB_HOST
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: orbitaos-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: orbitaos-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: orbitaos-secrets
+              key: DB_PASSWORD
+        - name: ConnectionStrings__DefaultConnection
+          value: "Server=$(DB_HOST);Database=$(DB_NAME);User Id=$(DB_USER);Password=$(DB_PASSWORD);TrustServerCertificate=True"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orbitaos-service
+  namespace: default
+  labels:
+    app: orbitaos
+spec:
+  type: LoadBalancer
+  selector:
+    app: orbitaos
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  sessionAffinity: ClientIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orbitaos-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orbitaos-deployment
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
