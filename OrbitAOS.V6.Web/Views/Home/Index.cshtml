@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to OrbitAOS</h1>
+    <p class="lead">Orbital Component Management System — powered by ASP.NET Core MVC on .NET 8</p>
+    <p>
+        <a class="btn btn-primary btn-lg" asp-controller="OrbitalComponents" asp-action="Index">
+            View Orbital Components
+        </a>
+    </p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <h2>Clean Architecture</h2>
+        <p>
+            This application follows Clean Architecture principles with clearly separated layers:
+            Domain, Application, Infrastructure, and Web.
+        </p>
+    </div>
+    <div class="col-md-4">
+        <h2>.NET 8</h2>
+        <p>
+            Migrated from ASP.NET MVC on .NET Framework to ASP.NET Core MVC on .NET 8 LTS,
+            leveraging the latest performance improvements and features.
+        </p>
+    </div>
+    <div class="col-md-4">
+        <h2>EF Core 8</h2>
+        <p>
+            Data access powered by Entity Framework Core 8 with SQL Server,
+            replacing the legacy Entity Framework 6 stack.
+        </p>
+    </div>
+</div>
