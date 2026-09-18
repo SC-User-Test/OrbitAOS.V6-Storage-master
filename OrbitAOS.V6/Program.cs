@@ -1,22 +1,30 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using OrbitAOS.V6.Data;
+using OrbitAOS.Application;
+using OrbitAOS.Infrastructure;
+using OrbitAOS.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+// ── Infrastructure layer (EF Core 8, repositories) ──────────────────────────
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+// ── Application layer (business services) ───────────────────────────────────
+builder.Services.AddApplicationServices();
+
+// ── ASP.NET Core Identity (net8.0) ──────────────────────────────────────────
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = true;
+    })
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// ── MVC with Views ───────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ── HTTP request pipeline ────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -24,7 +32,7 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    // HSTS: 30-day default. Adjust for production as needed.
     app.UseHsts();
 }
 
@@ -36,9 +44,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ── Routing ──────────────────────────────────────────────────────────────────
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Razor Pages for Identity UI scaffolding
 app.MapRazorPages();
 
 app.Run();
